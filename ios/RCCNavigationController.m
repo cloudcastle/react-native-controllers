@@ -265,13 +265,22 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
     {
       barButtonItem.accessibilityIdentifier = testID;
     }
+
+    NSString *fontFamily = button[@"fontFamily"];
+    NSNumber *fontSize = button[@"fontSize"];
+    if (fontFamily)
+    {
+      CGFloat size = fontSize ? fontSize.floatValue : 15.0;
+      NSDictionary *barButtonAppearanceDict = @{NSFontAttributeName : [UIFont fontWithName:fontFamily size:size]};
+      [barButtonItem setTitleTextAttributes:barButtonAppearanceDict forState:UIControlStateNormal];
+    }
   }
-  
+
   if ([side isEqualToString:@"left"])
   {
     [viewController.navigationItem setLeftBarButtonItems:barButtonItems animated:animated];
   }
-  
+
   if ([side isEqualToString:@"right"])
   {
     [viewController.navigationItem setRightBarButtonItems:barButtonItems animated:animated];
@@ -283,15 +292,15 @@ NSString const *CALLBACK_ASSOCIATED_ID = @"RCCNavigationController.CALLBACK_ASSO
                   props:(NSDictionary*)props
                   style:(NSDictionary*)style
 {
-  
+
   RCCTitleViewHelper *titleViewHelper = [[RCCTitleViewHelper alloc] init:viewController
                                                     navigationController:self
                                                                    title:props[@"title"]
                                                                 subtitle:props[@"subtitle"]
                                                           titleImageData:props[@"titleImage"]];
-  
+
   [titleViewHelper setup:style];
-  
+
 }
 
 
