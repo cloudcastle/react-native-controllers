@@ -31,9 +31,15 @@
   UIColor *buttonColor = nil;
   UIColor *selectedButtonColor = nil;
   NSDictionary *tabsStyle = props[@"style"];
+  NSString *tabBarShowLabels = nil; // + ------------ ADDED
+  NSString *tabBarShowOriginalImages = nil; // + ------------ ADDED
   if (tabsStyle)
   {
     NSString *tabBarButtonColor = tabsStyle[@"tabBarButtonColor"];
+
+    tabBarShowLabels = tabsStyle[@"tabBarShowLabels"]; // + ------------ ADDED
+    tabBarShowOriginalImages = tabsStyle[@"tabBarShowOriginalImages"]; // + ------------ ADDED
+
     if (tabBarButtonColor)
     {
       UIColor *color = tabBarButtonColor != (id)[NSNull null] ? [RCTConvert UIColor:tabBarButtonColor] : nil;
@@ -41,7 +47,7 @@
       buttonColor = color;
       selectedButtonColor = color;
     }
-    
+
     NSString *tabBarSelectedButtonColor = tabsStyle[@"tabBarSelectedButtonColor"];
     if (tabBarSelectedButtonColor)
     {
@@ -49,13 +55,15 @@
       self.tabBar.tintColor = color;
       selectedButtonColor = color;
     }
-    
+
     NSString *tabBarBackgroundColor = tabsStyle[@"tabBarBackgroundColor"];
     if (tabBarBackgroundColor)
     {
       UIColor *color = tabBarBackgroundColor != (id)[NSNull null] ? [RCTConvert UIColor:tabBarBackgroundColor] : nil;
       self.tabBar.barTintColor = color;
     }
+  } else {
+    tabBarShowLabels = @"shown"; // + ------------ ADDED
   }
 
   NSMutableArray *viewControllers = [NSMutableArray array];
@@ -84,29 +92,57 @@
       iconImage = [RCTConvert UIImage:icon];
       if (buttonColor)
       {
-        iconImage = [[self image:iconImage withColor:buttonColor] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        if ([tabBarShowOriginalImages isEqualToString: @"true"]) { // + ------------ ADDED
+          iconImage = [iconImage imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        } else {
+          iconImage = [[self image:iconImage withColor:buttonColor] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+        }
       }
     }
     UIImage *iconImageSelected = nil;
     id selectedIcon = tabItemLayout[@"props"][@"selectedIcon"];
     if (selectedIcon) iconImageSelected = [RCTConvert UIImage:selectedIcon];
 
-    viewController.tabBarItem = [[UITabBarItem alloc] initWithTitle:title image:iconImage tag:0];
-    viewController.tabBarItem.accessibilityIdentifier = tabItemLayout[@"props"][@"testID"];
-    viewController.tabBarItem.selectedImage = iconImageSelected;
-    
+    if ([tabBarShowLabels isEqualToString:@"hidden"]) {    // + ------------ ADDED
+      UITabBarItem *tabItem = [[UITabBarItem alloc] init];
+      viewController.tabBarItem = tabItem;
+      tabItem.image = iconImage;
+      tabItem.tag = 0;
+      tabItem.imageInsets = UIEdgeInsetsMake(6, 0, -6, 0);
+      viewController.tabBarItem.accessibilityIdentifier = tabItemLayout[@"props"][@"testID"];
+
+      if ([tabBarShowOriginalImages isEqualToString: @"true"]) { // + ------------ ADDED
+        viewController.tabBarItem.selectedImage = [iconImageSelected imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+      } else {
+        viewController.tabBarItem.selectedImage = iconImageSelected;
+      }
+    } else {
+      viewController.tabBarItem = [[UITabBarItem alloc] initWithTitle:title image:iconImage tag:0];
+      viewController.tabBarItem.accessibilityIdentifier = tabItemLayout[@"props"][@"testID"];
+
+      if ([tabBarShowOriginalImages isEqualToString: @"true"]) { // + ------------ ADDED
+        viewController.tabBarItem.selectedImage = [iconImageSelected imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal];
+      } else {
+        viewController.tabBarItem.selectedImage = iconImageSelected;
+      }
+    }
+
+//    viewController.tabBarItem = [[UITabBarItem alloc] initWithTitle:title image:iconImage tag:0];
+//    viewController.tabBarItem.accessibilityIdentifier = tabItemLayout[@"props"][@"testID"];
+//    viewController.tabBarItem.selectedImage = iconImageSelected;
+
     if (buttonColor)
     {
       [viewController.tabBarItem setTitleTextAttributes:
        @{NSForegroundColorAttributeName : buttonColor} forState:UIControlStateNormal];
     }
-    
+
     if (selectedButtonColor)
     {
       [viewController.tabBarItem setTitleTextAttributes:
        @{NSForegroundColorAttributeName : selectedButtonColor} forState:UIControlStateSelected];
     }
-    
+
     // create badge
     NSObject *badge = tabItemLayout[@"props"][@"badge"];
     if (badge == nil || [badge isEqual:[NSNull null]])
@@ -136,7 +172,7 @@
       if (tabIndex)
       {
         int i = (int)[tabIndex integerValue];
-      
+
         if ([self.viewControllers count] > i)
         {
           viewController = [self.viewControllers objectAtIndex:i];
@@ -148,11 +184,11 @@
       {
         viewController = [[RCCManager sharedInstance] getControllerWithId:contentId componentType:contentType];
       }
-      
+
       if (viewController)
       {
         NSObject *badge = actionParams[@"badge"];
-        
+
         if (badge == nil || [badge isEqual:[NSNull null]])
         {
           viewController.tabBarItem.badgeValue = nil;
@@ -163,7 +199,7 @@
         }
       }
     }
-  
+
     if ([performAction isEqualToString:@"switchTo"])
     {
       UIViewController *viewController = nil;
@@ -171,7 +207,7 @@
       if (tabIndex)
       {
         int i = (int)[tabIndex integerValue];
-      
+
         if ([self.viewControllers count] > i)
         {
           viewController = [self.viewControllers objectAtIndex:i];
@@ -183,7 +219,7 @@
       {
         viewController = [[RCCManager sharedInstance] getControllerWithId:contentId componentType:contentType];
       }
-    
+
       if (viewController)
       {
         [self setSelectedViewController:viewController];
